@@ -1,5 +1,6 @@
-package com.example.login;
+package com.example.login.entity;
 
+import com.example.login.enums.Role;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

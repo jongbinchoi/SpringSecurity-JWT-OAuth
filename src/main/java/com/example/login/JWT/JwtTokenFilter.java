@@ -1,5 +1,7 @@
-package com.example.login;
+package com.example.login.JWT;
 
+import com.example.login.entity.User;
+import com.example.login.service.UserService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

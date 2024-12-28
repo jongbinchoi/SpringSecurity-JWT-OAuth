@@ -1,5 +1,6 @@
-package com.example.login;
+package com.example.login.dto.request;
 
+import com.example.login.enums.Role;
 import lombok.Getter;
 import lombok.Setter;
 

@@ -1,5 +1,10 @@
 package com.example.login;
 
+import com.example.login.JWT.JwtUtil;
+import com.example.login.dto.request.LoginRequestDTO;
+import com.example.login.dto.request.RegisterRequestDTO;
+import com.example.login.entity.User;
+import com.example.login.service.UserService;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -101,5 +106,16 @@ public class JwtController {
         response.addCookie(refreshCookie);
 
         return ResponseEntity.ok().body(Map.of("accessToken", accessToken));
+    }
+
+    //회원가입
+    @PostMapping("/register")
+    public ResponseEntity<?> register(@RequestBody RegisterRequestDTO request) {
+        try {
+            userService.register(request.getUsername(), request.getPassword());
+            return ResponseEntity.ok("회원가입 성공");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
     }
 }

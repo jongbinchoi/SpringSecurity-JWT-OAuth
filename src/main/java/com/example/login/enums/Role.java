@@ -1,4 +1,4 @@
-package com.example.login;
+package com.example.login.enums;
 
 public enum Role {
     ROLE_USER,

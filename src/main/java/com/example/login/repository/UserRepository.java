@@ -1,5 +1,7 @@
-package com.example.login;
+package com.example.login.repository;
 
+import com.example.login.enums.Role;
+import com.example.login.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.Optional;
 
