@@ -1,16 +1,15 @@
 package com.example.login;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
 public class UserService {
 
     private final UserRepository userRepository;
 
-    public UserService(UserRepository userRepository) {
-        this.userRepository = userRepository;
-    }
 
     // 사용자 인증 (로그인 검증)
     public User authenticate(String username, String password) {
@@ -30,4 +29,12 @@ public class UserService {
         user.setRole(Role.ROLE_USER);  // 기본 역할 USER로 설정
         return userRepository.save(user);
     }
+
+
+    // 사용자 ID로 사용자 조회 (getUserById 메서드 추가)
+    public User getUserById(Long userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
+    }
+
 }
