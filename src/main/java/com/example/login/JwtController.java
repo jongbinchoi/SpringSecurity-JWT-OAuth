@@ -21,13 +21,14 @@ import java.util.Map;
 public class JwtController {
 
     private final JwtUtil jwtUtil;
+    private final UserService userService;
 
-    //리프레시 토큰을 사용해 새 액세스 토큰 발급
+    // 리프레시 토큰을 사용해 새 액세스 토큰 발급
     @PostMapping("/refresh")
-    public ResponseEntity<?> refreshToken(HttpServletRequest request, HttpServletResponse response) {
+    public ResponseEntity<?> refreshToken(HttpServletRequest request, HttpServletResponse response) { //클라이언트 요청과 서버 응답을 다루는 객체
         Cookie[] cookies = request.getCookies();
         if (cookies == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("No cookies found");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("쿠키 찾을 수 없음");
         }
 
         String refreshToken = null;
@@ -38,36 +39,67 @@ public class JwtController {
         }
 
         if (refreshToken == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Refresh Token not found");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Refresh Token 찾을 수 없음");
         }
 
         try {
-            Claims claims = jwtUtil.getUserIdFromToken(refreshToken);
+            Claims claims = jwtUtil.getUserIdFromToken(refreshToken); // 사용자 정보 검증
             Long userId = Long.valueOf(claims.getSubject());
 
             // 새 액세스 토큰 발급
             String newAccessToken = jwtUtil.generateAccessToken(userId);
 
             // 리프레시 토큰 만료 임박 시 새로 발급
-            Date expiration = claims.getExpiration();
+            Date expiration = claims.getExpiration(); //리프레시 토큰의 만료 시간을 가져옴
             long now = System.currentTimeMillis();
-            long timeUntilExpiration = expiration.getTime() - now;
+            long timeUntilExpiration = expiration.getTime() - now; //현재시간과 만료시간 비교해 남은 시간 계산
 
             String newRefreshToken = refreshToken;
-            if (timeUntilExpiration < (3 * 24 * 60 * 60 * 1000)) {
+            if (timeUntilExpiration < (3 * 24 * 60 * 60 * 1000)) {  // 3일 이하 남았을 경우 갱신
                 newRefreshToken = jwtUtil.generateRefreshToken(userId);
 
-                Cookie refreshCookie = new Cookie("refreshToken", newRefreshToken);
+                // 새 리프레시 토큰을 쿠키에 저장
+                //todo HttpOnly쿠키 : 자바스크립트에서 접근 할 수 없도록 설정 -> XSS 공격 방지
+                Cookie refreshCookie = new Cookie("refreshToken", newRefreshToken); //이름, 값 = refreshToken에 newRefreshToken 값을 담아
                 refreshCookie.setHttpOnly(true);
-                refreshCookie.setSecure(true);
-                refreshCookie.setPath("/api/auth/refresh");
-                refreshCookie.setMaxAge(7 * 24 * 60 * 60);
-                refreshCookie.setAttribute("SameSite", "Strict");
+                refreshCookie.setSecure(true); //HTTPS 환경에서만 쿠키를 전송
+                refreshCookie.setPath("/api/auth/refresh"); //이 쿠키는 여기서만 접근가능
+                refreshCookie.setMaxAge(7 * 24 * 60 * 60);  // 7일
+                refreshCookie.setAttribute("SameSite", "Strict"); // CSRF 공격방어, 다른 사이트에서 요청할 경우 쿠키를 전송하지 않도록 설정
                 response.addCookie(refreshCookie);
             }
 
             return ResponseEntity.ok().body(Map.of("accessToken", newAccessToken));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Invalid Refresh Token");
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Refresh Token 유효하지않음");
         }
+    }
+
+    //todo 리프레시 토큰 = 쿠키, 액세스토큰=JSON
+
+    // 로그인 (액세스 토큰 + 리프레시 토큰 발급)
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@RequestBody LoginRequestDTO request, HttpServletResponse response) {
+        User user = userService.authenticate(request.getUsername(), request.getPassword());
+
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
+        }
+
+        // 액세스 토큰과 리프레시 토큰 발급
+        String accessToken = jwtUtil.generateAccessToken(user.getId());
+        String refreshToken = jwtUtil.generateRefreshToken(user.getId());
+
+        // 리프레시 토큰을 HttpOnly 쿠키에 저장
+        Cookie refreshCookie = new Cookie("refreshToken", refreshToken);
+        refreshCookie.setHttpOnly(true);
+        refreshCookie.setSecure(true);
+        refreshCookie.setPath("/api/auth/refresh");
+        refreshCookie.setMaxAge(7 * 24 * 60 * 60);  // 7일
+        refreshCookie.setAttribute("SameSite", "Strict");
+
+        response.addCookie(refreshCookie);
+
+        return ResponseEntity.ok().body(Map.of("accessToken", accessToken));
+    }
 }
