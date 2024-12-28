@@ -38,6 +38,16 @@ public class JwtUtil {
     }
 
 
+    // 토큰에서 사용자 정보 추출
+    public Claims getUserIdFromToken(String token) {
+        return Jwts.parserBuilder()
+                .setSigningKey(key)
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+    }
+
+
     //todo 왜 한번에 안하고 build()를 따로 호출? => 유연성을 높이기 위함, 예를 들어 , setSigningKey  외에도 옵션 추가가능
     //    .requireIssuer("myapp")  // 발급자(issuer) 검증 추가
     //    .requireAudience("user")  // 특정 audience만 허용 => 추가적인 검증 조건 붙일 수있다
