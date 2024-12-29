@@ -4,10 +4,12 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+import jakarta.annotation.PostConstruct;
 import org.springframework.stereotype.Component;
 
 import java.security.Key;
 import java.util.Date;
+import java.util.TimeZone;
 
 @Component
 public class JwtUtil {
@@ -69,5 +71,11 @@ public class JwtUtil {
             throw new RuntimeException("유효하지 않은 리프레쉬 토큰");
         }
 
+    }
+
+    @PostConstruct
+    public void init() {
+        TimeZone.setDefault(TimeZone.getTimeZone("Asia/Seoul"));  // 서버의 기본 TimeZone을 한국으로 설정
+        System.out.println("현재 시간대: " + TimeZone.getDefault().getDisplayName());
     }
 }

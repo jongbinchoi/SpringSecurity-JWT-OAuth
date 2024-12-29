@@ -1,4 +1,4 @@
-package com.example.login;
+package com.example.login.controller;
 
 import com.example.login.JWT.JwtUtil;
 import com.example.login.dto.request.LoginRequestDTO;
@@ -10,6 +10,7 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.Date;
 import java.util.Map;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
@@ -85,9 +87,11 @@ public class JwtController {
     // 로그인 (액세스 토큰 + 리프레시 토큰 발급)
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequestDTO request, HttpServletResponse response) {
+        log.info("로그인 시도 - 사용자명: {}", request.getUsername());
         User user = userService.authenticate(request.getUsername(), request.getPassword());
 
         if (user == null) {
+            log.warn("로그인 실패 - 사용자명: {}", request.getUsername());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
         }
 
@@ -95,11 +99,13 @@ public class JwtController {
         String accessToken = jwtUtil.generateAccessToken(user.getId());
         String refreshToken = jwtUtil.generateRefreshToken(user.getId());
 
+        log.info("로그인 성공 - 사용자 ID: {}, Access Token: {}, Refresh Token: {}", user.getId(), accessToken, refreshToken);
+
         // 리프레시 토큰을 HttpOnly 쿠키에 저장
         Cookie refreshCookie = new Cookie("refreshToken", refreshToken);
         refreshCookie.setHttpOnly(true);
-        refreshCookie.setSecure(true);
-        refreshCookie.setPath("/api/auth/refresh");
+        refreshCookie.setSecure(false);  // 개발 환경에서는 false로 설정
+        refreshCookie.setPath("/"); // 모든 경로에서 쿠키 사용 가능
         refreshCookie.setMaxAge(7 * 24 * 60 * 60);  // 7일
         refreshCookie.setAttribute("SameSite", "Strict");
 
@@ -111,10 +117,14 @@ public class JwtController {
     //회원가입
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody RegisterRequestDTO request) {
+        log.info("회원가입 시도 - 사용자명: {}", request.getUsername());
+
         try {
             userService.register(request.getUsername(), request.getPassword());
+            log.info("회원가입 성공 - 사용자명: {}", request.getUsername());
             return ResponseEntity.ok("회원가입 성공");
         } catch (Exception e) {
+            log.error("회원가입 실패 - 사용자명: {}, 이유: {}", request.getUsername(), e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
     }
