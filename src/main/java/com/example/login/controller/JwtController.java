@@ -13,6 +13,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.web.csrf.CsrfToken;
+import org.springframework.security.web.csrf.CsrfTokenRepository;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -29,6 +31,7 @@ public class JwtController {
 
     private final JwtUtil jwtUtil;
     private final UserService userService;
+    private final CsrfTokenRepository csrfTokenRepository;
 
     // 리프레시 토큰을 사용해 새 액세스 토큰 발급
     @PostMapping("/refresh")
@@ -86,12 +89,12 @@ public class JwtController {
 
     // 로그인 (액세스 토큰 + 리프레시 토큰 발급)
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LoginRequestDTO request, HttpServletResponse response) {
-        log.info("로그인 시도 - 사용자명: {}", request.getUsername());
-        User user = userService.authenticate(request.getUsername(), request.getPassword());
+    public ResponseEntity<?> login(@RequestBody LoginRequestDTO loginRequestDTO,  HttpServletRequest request, HttpServletResponse response) {
+        log.info("로그인 시도 - 사용자명: {}", loginRequestDTO.getUsername());
+        User user = userService.authenticate(loginRequestDTO.getUsername(), loginRequestDTO.getPassword());
 
         if (user == null) {
-            log.warn("로그인 실패 - 사용자명: {}", request.getUsername());
+            log.warn("로그인 실패 - 사용자명: {}",loginRequestDTO.getUsername());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
         }
 
@@ -111,7 +114,10 @@ public class JwtController {
 
         response.addCookie(refreshCookie);
 
-        return ResponseEntity.ok().body(Map.of("accessToken", accessToken));
+        return ResponseEntity.ok().body(Map.of(
+                "accessToken", accessToken
+        ));
+
     }
 
     //회원가입
@@ -128,4 +134,5 @@ public class JwtController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
     }
+
 }

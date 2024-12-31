@@ -2,6 +2,7 @@ package com.example.login;
 
 import com.example.login.JWT.JwtTokenFilter;
 import com.example.login.JWT.JwtUtil;
+import com.example.login.repository.UserRepository;
 import com.example.login.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -16,6 +17,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.csrf.CsrfTokenRepository;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -42,7 +45,9 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.disable())  // CSRF 보호 비활성화 (JWT 사용 시 필요)
+                .csrf(csrf -> csrf
+                        .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())  // CSRF 토큰 발급 및 쿠키 저장
+                )
                 .formLogin(formLogin -> formLogin.disable()) // 폼 로그인 비활성화
                 .httpBasic(httpBasic -> httpBasic.disable()) // HTTP Basic 인증 비활성화
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
@@ -50,7 +55,7 @@ public class SecurityConfig {
                         .frameOptions(frameOptions -> frameOptions.disable())) // X-Frame-Options 비활성화
 
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/*", "/api/auth/refresh", "/h2-console/**").permitAll()  // 로그인, 리프레시 허용
+                        .requestMatchers("/api/auth/*", "/api/auth/refresh", "/h2-console/**","/api/*").permitAll()  // 로그인, 리프레시 허용
                         .anyRequest().authenticated()  // 나머지 API는 인증 필요
                 )
 
@@ -84,5 +89,19 @@ public class SecurityConfig {
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }
+
+
+    //todo 기본적으로 Spring Security는 HTML폼 기반 CSRF보호함 -> 따로 커스텀 CSRF토큰 저장소 설정해야지, REST API, AJAX 요청 또는 다른 HTTP 메서드도 CSRF 보호를 적용
+    //      REST API에서는 CSRF 토큰을 쿠키에 저장하고, 클라이언트가 이를 헤더에 추가하는 방식이 필요
+    //      CookieCsrfTokenRepository는 이 과정을 자동으로 처리
+    @Bean
+    public CsrfTokenRepository csrfTokenRepository() {
+        CookieCsrfTokenRepository repository = new CookieCsrfTokenRepository();
+        repository.setCookieHttpOnly(false);  // JavaScript에서 접근 가능하게 설정 (클라이언트가 읽어야 함)
+        repository.setHeaderName("X-XSRF-TOKEN");  // CSRF 토큰을 포함하는 헤더 이름
+        repository.setCookieName("XSRF-TOKEN");  // CSRF 토큰 쿠키 이름
+        return repository;
+    }
+
 
 }
