@@ -1,0 +1,24 @@
+spring:
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            redirect-uri: "{baseUrl}/login/oauth2/code/google"
+            scope:
+              - email
+              - profile
+          naver:
+            redirect-uri: "{baseUrl}/login/oauth2/code/naver"
+            authorization-grant-type: authorization_code
+            scope:
+              - name
+              - email
+            client-name: Naver
+          kakao:
+            redirect-uri: "{baseUrl}/login/oauth2/code/kakao"
+            authorization-grant-type: authorization_code
+            scope:
+              - profile_nickname
+              - account_email
+            client-name: Kakao

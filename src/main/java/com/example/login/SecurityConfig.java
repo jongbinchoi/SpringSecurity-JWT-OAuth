@@ -5,6 +5,7 @@ import com.example.login.JWT.JwtUtil;
 import com.example.login.repository.UserRepository;
 import com.example.login.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.access.hierarchicalroles.RoleHierarchy;
@@ -30,6 +31,25 @@ public class SecurityConfig {
 
 
     private final JwtTokenFilter jwtTokenFilter;
+
+
+    @Value("${secrets.oauth.google.client-id}")
+    private String googleClientId;
+
+    @Value("${secrets.oauth.google.client-secret}")
+    private String googleClientSecret;
+
+    @Value("${secrets.oauth.naver.client-id}")
+    private String naverClientId;
+
+    @Value("${secrets.oauth.naver.client-secret}")
+    private String naverClientSecret;
+
+    @Value("${secrets.oauth.kakao.client-id}")
+    private String kakaoClientId;
+
+    @Value("${secrets.oauth.kakao.client-secret}")
+    private String kakaoClientSecret;
 
 
     @Bean
@@ -58,9 +78,17 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/*", "/api/auth/refresh", "/h2-console/**","/api/*").permitAll()  // 로그인, 리프레시 허용
                         .anyRequest().authenticated()  // 나머지 API는 인증 필요
                 )
+                .oauth2Login(oauth2 -> oauth2
+                        .clientRegistrationRepository(clientRegistrationRepository())  // OAuth 클라이언트 등록
+//                       선택옵션
+                        .defaultSuccessUrl("/user/info", true) // 로그인 성공 후 이동 경로
+                        .failureUrl("/login?error=true") // 로그인 실패 시
+                )
 
                 //todo 요청이 API로 전달 되기전 검증 해야함, SecurityFilterChain보다 먼저 실행, 헤더에서 JWT추출하고 검증역할
                 .addFilterBefore(jwtTokenFilter, UsernamePasswordAuthenticationFilter.class);  // JWT 필터 추가, 로그인 요청을 처리하는 필터
+
+
 
         return http.build();
     }

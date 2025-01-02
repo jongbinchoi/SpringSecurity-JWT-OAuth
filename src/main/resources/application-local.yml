@@ -1,0 +1,37 @@
+spring:
+  h2:
+    console:
+      enabled: true
+      path: /h2-console  # H2 콘솔 활성화
+  datasource:
+    driver-class-name: org.h2.Driver
+    url: jdbc:h2:mem:test
+    username: sa
+    password:
+
+  sql:
+    init:
+      mode: always
+
+
+
+  # JPA 설정
+  jpa:
+
+    # Hibernate 초기화와 data.sql을 사용하는 경우
+    ## 스프링 2.5 이후부터는 sql script가 hibernate 스키마 생성 이전에 수행된다.
+    ## 따라서, schema.sql 등으로 미리 table을 생성해주지 않은 경우, 없는 DB에 대해 data.sql이 수행되어 오류가 발생함
+    ### hibernate 스키마 생성 이후 sql script를 동작시키기 위한 옵션(defer-datasource-initialization: true)
+    defer-datasource-initialization: true
+
+    hibernate:
+      ddl-auto: create-drop
+    database-platform: org.hibernate.dialect.H2Dialect
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+
+
+        # 로컬 환경에서 SQL 동작 확인을 위한 설정
+        format_sql: true
+        show_sql: true
