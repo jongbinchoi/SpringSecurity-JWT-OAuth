@@ -30,5 +30,4 @@ Spring Security 6 이상에서 **JWT**와 **OAuth 2.0**을 사용해 로그인 �
 - 커스텀 Security Config 및 핸들러 구현
 - 로그인, 로그아웃, 예외 처리 설정
 
-####학습 내용 정리
-[학습 내용 정리](https://velog.io/@jongbinchoi/posts)
+#### [학습 내용 정리 Velog](https://velog.io/@jongbinchoi/posts)
