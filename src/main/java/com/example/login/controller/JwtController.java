@@ -125,7 +125,7 @@ public class JwtController {
     public ResponseEntity<?> register(@RequestBody RegisterRequestDTO request) {
         log.info("회원가입 시도 - 사용자id: {}", request.getUserId());
 
-        try {
+        try {//매서드 호출 순서 중요
             userService.register(request.getUserId(),request.getUsername(), request.getEmail(), request.getPassword());
             log.info("회원가입 성공 - 사용자id: {}", request.getUserId());
             return ResponseEntity.ok("회원가입 성공");

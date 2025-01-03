@@ -28,7 +28,7 @@ public class UserService {
     }
 
     // 회원가입 로직
-    public User register(String userId, String username, String password, String email) {
+    public User register(String userId, String username, String email, String password) {
         Optional<User> existingUser = userRepository.findByUserId(userId);
         if (existingUser.isPresent()) {
             throw new RuntimeException("이미 존재하는 사용자입니다.");
@@ -39,7 +39,7 @@ public class UserService {
 
         // 비밀번호 암호화 후 저장
         User user = new User();
-        user.setUsername(userId);
+        user.setUserId(userId);
         user.setUsername(username);
         user.setEmail(email);
         user.setPassword(encodedPassword);

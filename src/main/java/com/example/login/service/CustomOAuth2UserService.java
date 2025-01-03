@@ -4,6 +4,7 @@ import com.example.login.entity.User;
 import com.example.login.enums.Role;
 import com.example.login.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
@@ -14,7 +15,7 @@ import org.springframework.stereotype.Service;
 import java.util.Map;
 import java.util.Optional;
 
-
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequest, OAuth2User> {
@@ -58,6 +59,24 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
         Optional<User> userOptional = userRepository.findByEmail(email);
 
         if (userOptional.isPresent()) {
+            //기존 사용자 계정과 소셜 계정 연동
+            User existingUser = userOptional.get();
+            if (existingUser.getProvider() == null) {
+                existingUser.setProvider(provider);
+                existingUser.setProviderId(providerId);
+                userRepository.save(existingUser);
+                log.info("기존 계정에 소셜 계정 연동 완료 - 사용자: {}", email);
+            } else {
+                // 이미 동일한 소셜 계정으로 가입된 경우 예외 발생
+                if (existingUser.getProvider().equals(provider)) {
+                    log.warn("이미 해당 소셜 계정으로 가입된 사용자: {}", email);
+                    throw new IllegalStateException("이미 해당 소셜 계정으로 가입된 사용자입니다.");
+                } else {
+                    // 다른 소셜 제공자로 가입된 경우
+                    throw new IllegalStateException("이미 다른 소셜 계정으로 가입된 이메일입니다.");
+                }
+
+            }
             return oAuth2User;
         } else {
             return registerNewUser(email, name, provider, providerId, oAuth2User);
