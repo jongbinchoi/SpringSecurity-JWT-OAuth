@@ -16,6 +16,10 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.client.registration.ClientRegistration;
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
+import org.springframework.security.oauth2.client.registration.InMemoryClientRegistrationRepository;
+import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
@@ -33,25 +37,6 @@ public class SecurityConfig {
     private final JwtTokenFilter jwtTokenFilter;
 
 
-    @Value("${secrets.oauth.google.client-id}")
-    private String googleClientId;
-
-    @Value("${secrets.oauth.google.client-secret}")
-    private String googleClientSecret;
-
-    @Value("${secrets.oauth.naver.client-id}")
-    private String naverClientId;
-
-    @Value("${secrets.oauth.naver.client-secret}")
-    private String naverClientSecret;
-
-    @Value("${secrets.oauth.kakao.client-id}")
-    private String kakaoClientId;
-
-    @Value("${secrets.oauth.kakao.client-secret}")
-    private String kakaoClientSecret;
-
-
     @Bean
     public RoleHierarchy roleHierarchy() {
         RoleHierarchyImpl roleHierarchy = new RoleHierarchyImpl();
@@ -66,7 +51,8 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(csrf -> csrf
-                        .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())  // CSRF 토큰 발급 및 쿠키 저장
+                        .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+
                 )
                 .formLogin(formLogin -> formLogin.disable()) // 폼 로그인 비활성화
                 .httpBasic(httpBasic -> httpBasic.disable()) // HTTP Basic 인증 비활성화
@@ -75,14 +61,10 @@ public class SecurityConfig {
                         .frameOptions(frameOptions -> frameOptions.disable())) // X-Frame-Options 비활성화
 
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/*", "/api/auth/refresh", "/h2-console/**","/api/*").permitAll()  // 로그인, 리프레시 허용
+                        .requestMatchers("/api/auth/*", "/api/auth/refresh", "/h2-console/**","/api/*","/user/**").permitAll()  // 로그인, 리프레시 허용
                         .anyRequest().authenticated()  // 나머지 API는 인증 필요
                 )
                 .oauth2Login(oauth2 -> oauth2
-                        .clientRegistrationRepository(clientRegistrationRepository())  // OAuth 클라이언트 등록
-//                      .userInfoEndpoint(userInfo -> userInfo
-//                           .userService(customOAuth2UserService)  // 사용자 정보 처리
-//                       )
                         .defaultSuccessUrl("/user/info", true) // 로그인 성공 후 이동 경로
                         .failureUrl("/login?error=true") // 로그인 실패 시
                 )
