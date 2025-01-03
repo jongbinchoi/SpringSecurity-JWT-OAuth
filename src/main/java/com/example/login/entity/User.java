@@ -25,7 +25,12 @@ public class User {
     @Column(unique = true)
     private String email;
 
+    @Column(unique = true)
+    private String userId; //로그인 아이디
+
+    @Column(unique = false)
     private String username;
+
     private String password;
 
     @Enumerated(EnumType.STRING)  // DB에 저장할 때 Enum의 이름 그대로 저장

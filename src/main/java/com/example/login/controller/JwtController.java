@@ -90,11 +90,11 @@ public class JwtController {
     // 로그인 (액세스 토큰 + 리프레시 토큰 발급)
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequestDTO loginRequestDTO,  HttpServletRequest request, HttpServletResponse response) {
-        log.info("로그인 시도 - 사용자명: {}", loginRequestDTO.getUsername());
-        User user = userService.authenticate(loginRequestDTO.getUsername(), loginRequestDTO.getPassword());
+        log.info("로그인 시도 - 사용자명: {}", loginRequestDTO.getUserId());
+        User user = userService.authenticate(loginRequestDTO.getUserId(), loginRequestDTO.getPassword());
 
         if (user == null) {
-            log.warn("로그인 실패 - 사용자명: {}",loginRequestDTO.getUsername());
+            log.warn("로그인 실패 - 사용자명: {}",loginRequestDTO.getUserId());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
         }
 
@@ -123,14 +123,14 @@ public class JwtController {
     //회원가입
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody RegisterRequestDTO request) {
-        log.info("회원가입 시도 - 사용자명: {}", request.getUsername());
+        log.info("회원가입 시도 - 사용자id: {}", request.getUserId());
 
         try {
-            userService.register(request.getUsername(), request.getPassword());
-            log.info("회원가입 성공 - 사용자명: {}", request.getUsername());
+            userService.register(request.getUserId(),request.getUsername(), request.getEmail(), request.getPassword());
+            log.info("회원가입 성공 - 사용자id: {}", request.getUserId());
             return ResponseEntity.ok("회원가입 성공");
         } catch (Exception e) {
-            log.error("회원가입 실패 - 사용자명: {}, 이유: {}", request.getUsername(), e.getMessage());
+            log.error("회원가입 실패 - 사용자명: {}, 이유: {}", request.getUserId(), e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
     }

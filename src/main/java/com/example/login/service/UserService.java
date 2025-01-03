@@ -18,8 +18,8 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
 
     // 사용자 인증 (로그인 검증)
-    public User authenticate(String username, String password) {
-        Optional<User> user = userRepository.findByUsername(username);
+    public User authenticate(String userId, String password) {
+        Optional<User> user = userRepository.findByUserId(userId);
 
         if (user.isPresent() && passwordEncoder.matches(password, user.get().getPassword())) {
             return user.get();
@@ -28,8 +28,8 @@ public class UserService {
     }
 
     // 회원가입 로직
-    public User register(String username, String password) {
-        Optional<User> existingUser = userRepository.findByUsername(username);
+    public User register(String userId, String username, String password, String email) {
+        Optional<User> existingUser = userRepository.findByUserId(userId);
         if (existingUser.isPresent()) {
             throw new RuntimeException("이미 존재하는 사용자입니다.");
         }
@@ -39,7 +39,9 @@ public class UserService {
 
         // 비밀번호 암호화 후 저장
         User user = new User();
+        user.setUsername(userId);
         user.setUsername(username);
+        user.setEmail(email);
         user.setPassword(encodedPassword);
         user.setRole(Role.ROLE_USER);
         return userRepository.save(user);

@@ -80,7 +80,9 @@ public class SecurityConfig {
                 )
                 .oauth2Login(oauth2 -> oauth2
                         .clientRegistrationRepository(clientRegistrationRepository())  // OAuth 클라이언트 등록
-//                       선택옵션
+//                      .userInfoEndpoint(userInfo -> userInfo
+//                           .userService(customOAuth2UserService)  // 사용자 정보 처리
+//                       )
                         .defaultSuccessUrl("/user/info", true) // 로그인 성공 후 이동 경로
                         .failureUrl("/login?error=true") // 로그인 실패 시
                 )
