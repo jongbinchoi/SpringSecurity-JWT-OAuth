@@ -55,14 +55,18 @@ public class SecurityConfig {
                         .ignoringRequestMatchers("/h2-console/**")  // H2 콘솔 CSRF 비활성화
 
                 )
-                .formLogin(formLogin -> formLogin.disable()) // 폼 로그인 비활성화
+               // .formLogin(formLogin -> formLogin.disable()) // 폼 로그인 비활성화
+                .formLogin(form -> form
+                        .loginPage("/")  // 커스텀 로그인 페이지
+                        .permitAll()                 // 로그인 페이지는 누구나 접근 가능
+                )
                 .httpBasic(httpBasic -> httpBasic.disable()) // HTTP Basic 인증 비활성화
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .headers(headers -> headers
                         .frameOptions(frameOptions -> frameOptions.disable())) // X-Frame-Options 비활성화
 
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/*", "/api/auth/refresh", "/h2-console/**","/api/*","/user/**").permitAll()  // 로그인, 리프레시 허용
+                        .requestMatchers("/api/auth/*", "/api/auth/refresh", "/h2-console/**","/api/*","/user/**", "/").permitAll()  // 로그인, 리프레시 허용
                         .anyRequest().authenticated()  // 나머지 API는 인증 필요
                 )
                 .oauth2Login(oauth2 -> oauth2
