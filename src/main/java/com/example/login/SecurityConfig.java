@@ -51,7 +51,8 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(csrf -> csrf
-                        .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+                        .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())  // CSRF 토큰 발급 및 쿠키 저장
+                        .ignoringRequestMatchers("/h2-console/**")  // H2 콘솔 CSRF 비활성화
 
                 )
                 .formLogin(formLogin -> formLogin.disable()) // 폼 로그인 비활성화
